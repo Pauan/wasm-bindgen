@@ -79,6 +79,14 @@ fn opt_f64() -> Descriptor {
     Descriptor::Option(Box::new(Descriptor::F64))
 }
 
+fn thunk() -> Descriptor {
+    Descriptor::Function(Box::new(Function {
+        arguments: vec![],
+        shim_idx: 0,
+        ret: Descriptor::Unit,
+    }))
+}
+
 intrinsics! {
     pub enum Intrinsic {
         #[symbol = "__wbindgen_jsval_eq"]
@@ -168,5 +176,8 @@ intrinsics! {
         #[symbol = "__wbindgen_init_anyref_table"]
         #[signature = fn() -> Unit]
         InitAnyrefTable,
+        #[symbol = "__wbindgen_try_catch"]
+        #[signature = fn(thunk()) -> Anyref]
+        TryCatch,
     }
 }

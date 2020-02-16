@@ -2728,6 +2728,12 @@ impl<'a> Context<'a> {
                 }
                 base
             }
+
+            Intrinsic::TryCatch => {
+                assert_eq!(args.len(), 1);
+                self.expose_handle_error()?;
+                format!("try {{ {}(); }} catch (e) {{ handleError(e); }}", args[0])
+            }
         };
         Ok(expr)
     }

@@ -526,6 +526,8 @@ externs! {
         fn __wbindgen_memory() -> u32;
         fn __wbindgen_module() -> u32;
         fn __wbindgen_function_table() -> u32;
+
+        fn __wbindgen_try_catch(idx: u32) -> ();
     }
 }
 
@@ -1164,5 +1166,34 @@ impl<T> Deref for Clamped<T> {
 impl<T> DerefMut for Clamped<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
+    }
+}
+
+
+if_std! {
+    use std::panic::UnwindSafe;
+
+    pub fn try_catch<A, F>(f: F) -> Result<A, JsValue>
+        where F: FnOnce() -> A + UnwindSafe {
+
+        // We have to use Box so that way we can manually free it if an error occurs.
+        let pointer = Box::into_raw(Box::new(f));
+
+        let mut value = None;
+
+        let error = __wbindgen_try_catch(&mut || {
+            let f = unsafe { Box::from_raw(pointer) };
+            value = Some(f());
+        });
+
+        // It didn't error, and therefore the Box has already been freed.
+        if let Some(value) = value {
+            Ok(value)
+
+        } else {
+            // This is safe because if an error occured then the Box was not dropped.
+            let _ = unsafe { Box::from_raw(pointer) };
+            Err(error)
+        }
     }
 }
